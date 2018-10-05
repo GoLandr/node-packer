@@ -27,9 +27,12 @@ const tls = require('tls');
 const url = require('url');
 const http = require('http');
 const util = require('util');
-const inherits = util.inherits;
+const { inherits } = util;
 const debug = util.debuglog('https');
 const { urlToOptions, searchParamsSymbol } = require('internal/url');
+const { IncomingMessage, ServerResponse } = require('http');
+const { kIncomingMessage } = require('_http_common');
+const { kServerResponse } = require('_http_server');
 
 function Server(opts, requestListener) {
   if (!(this instanceof Server)) return new Server(opts, requestListener);
@@ -51,9 +54,10 @@ function Server(opts, requestListener) {
     opts.ALPNProtocols = ['http/1.1'];
   }
 
-  tls.Server.call(this, opts, http._connectionListener);
+  this[kIncomingMessage] = opts.IncomingMessage || IncomingMessage;
+  this[kServerResponse] = opts.ServerResponse || ServerResponse;
 
-  this.httpAllowHalfOpen = false;
+  tls.Server.call(this, opts, http._connectionListener);
 
   if (requestListener) {
     this.addListener('request', requestListener);

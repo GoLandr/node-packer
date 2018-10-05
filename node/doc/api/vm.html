@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>VM (Executing JavaScript) | Node.js v8.4.0 Documentation</title>
+  <meta name="viewport" content="width=device-width">
+  <title>VM (Executing JavaScript) | Node.js v8.12.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/sh.css">
@@ -37,6 +38,7 @@
 <li><a class="nav-deprecations" href="deprecations.html">Deprecated APIs</a></li>
 <li><a class="nav-dns" href="dns.html">DNS</a></li>
 <li><a class="nav-domain" href="domain.html">Domain</a></li>
+<li><a class="nav-esm" href="esm.html">ECMAScript Modules</a></li>
 <li><a class="nav-errors" href="errors.html">Errors</a></li>
 <li><a class="nav-events" href="events.html">Events</a></li>
 <li><a class="nav-fs" href="fs.html">File System</a></li>
@@ -50,6 +52,7 @@
 <li><a class="nav-net" href="net.html">Net</a></li>
 <li><a class="nav-os" href="os.html">OS</a></li>
 <li><a class="nav-path" href="path.html">Path</a></li>
+<li><a class="nav-perf_hooks" href="perf_hooks.html">Performance Hooks</a></li>
 <li><a class="nav-process" href="process.html">Process</a></li>
 <li><a class="nav-punycode" href="punycode.html">Punycode</a></li>
 <li><a class="nav-querystring" href="querystring.html">Query Strings</a></li>
@@ -72,20 +75,39 @@
 
 <ul>
 <li><a class="nav-https-github-com-nodejs-node" href="https://github.com/nodejs/node">GitHub Repo &amp; Issue Tracker</a></li>
-<li><a class="nav-http-groups-google-com-group-nodejs" href="http://groups.google.com/group/nodejs">Mailing List</a></li>
+<li><a class="nav-https-groups-google-com-group-nodejs" href="https://groups.google.com/group/nodejs">Mailing List</a></li>
 </ul>
 
     </div>
 
     <div id="column1" data-id="vm" class="interior">
       <header>
-        <h1>Node.js v8.4.0 Documentation</h1>
+        <h1>Node.js v8.12.0 Documentation</h1>
         <div id="gtoc">
-          <p>
-            <a href="index.html" name="toc">Index</a> |
-            <a href="all.html">View on single page</a> |
-            <a href="vm.json">View as JSON</a>
-          </p>
+          <ul>
+            <li>
+              <a href="index.html" name="toc">Index</a>
+            </li>
+            <li>
+              <a href="all.html">View on single page</a>
+            </li>
+            <li>
+              <a href="vm.json">View as JSON</a>
+            </li>
+            
+    <li class="version-picker">
+      <a href="#">View another version <span>&#x25bc;</span></a>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v9.x/api/vm.html">9.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v8.x/api/vm.html">8.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v7.x/api/vm.html">7.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v6.x/api/vm.html">6.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v5.x/api/vm.html">5.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v4.x/api/vm.html">4.x <b>LTS</b></a></li>
+<li><a href="https://nodejs.org/docs/latest-v0.12.x/api/vm.html">0.12.x</a></li>
+<li><a href="https://nodejs.org/docs/latest-v0.10.x/api/vm.html">0.10.x</a></li></ol>
+    </li>
+  
+          </ul>
         </div>
         <hr>
       </header>
@@ -117,13 +139,36 @@
 
       <div id="apicontent">
         <h1>VM (Executing JavaScript)<span><a class="mark" href="#vm_vm_executing_javascript" id="vm_vm_executing_javascript">#</a></span></h1>
-<pre class="api_stability api_stability_2"><a href="documentation.html#documentation_stability_index">Stability: 2</a> - Stable</pre><!--name=vm-->
+<!--introduced_in=v0.10.0-->
+<div class="api_stability api_stability_2"><a href="documentation.html#documentation_stability_index">Stability: 2</a> - Stable</div><!--name=vm-->
 <p>The <code>vm</code> module provides APIs for compiling and running code within V8 Virtual
-Machine contexts. It can be accessed using:</p>
+Machine contexts.</p>
+<p>JavaScript code can be compiled and run immediately or
+compiled, saved, and run later.</p>
+<p>A common use case is to run the code in a sandboxed environment.
+The sandboxed code uses a different V8 Context, meaning that
+it has a different global object than the rest of the code.</p>
+<p>One can provide the context by <a href="#vm_what_does_it_mean_to_contextify_an_object">&quot;contextifying&quot;</a> a sandbox
+object. The sandboxed code treats any property on the sandbox like a
+global variable. Any changes on global variables caused by the sandboxed
+code are reflected in the sandbox object.</p>
 <pre><code class="lang-js">const vm = require(&#39;vm&#39;);
+
+const x = 1;
+
+const sandbox = { x: 2 };
+vm.createContext(sandbox); // Contextify the sandbox.
+
+const code = &#39;x += 40; var y = 17;&#39;;
+// x and y are global variables in the sandboxed environment.
+// Initially, x has the value 2 because that is the value of sandbox.x.
+vm.runInContext(code, sandbox);
+
+console.log(sandbox.x); // 42
+console.log(sandbox.y); // 17
+
+console.log(x); // 1; y is not defined.
 </code></pre>
-<p>JavaScript code can be compiled and run immediately or compiled, saved, and run
-later.</p>
 <p><em>Note</em>: The vm module is not a security mechanism.
 <strong>Do not use it to run untrusted code</strong>.</p>
 <h2>Class: vm.Script<span><a class="mark" href="#vm_class_vm_script" id="vm_class_vm_script">#</a></span></h2>
@@ -173,9 +218,8 @@ depending on whether code cache data is produced successfully.</li>
 </li>
 </ul>
 <p>Creating a new <code>vm.Script</code> object compiles <code>code</code> but does not run it. The
-compiled <code>vm.Script</code> can be run later multiple times. It is important to note
-that the <code>code</code> is not bound to any global object; rather, it is bound before
-each run, just for that run.</p>
+compiled <code>vm.Script</code> can be run later multiple times. The <code>code</code> is not bound to
+any global object; rather, it is bound before each run, just for that run.</p>
 <h3>script.runInContext(contextifiedSandbox[, options])<span><a class="mark" href="#vm_script_runincontext_contextifiedsandbox_options" id="vm_script_runincontext_contextifiedsandbox_options">#</a></span></h3>
 <div class="api_metadata">
 <details class="changelog"><summary>History</summary>
@@ -207,7 +251,7 @@ before terminating execution. If execution is terminated, an <a href="errors.htm
 will be thrown.</li>
 <li><code>breakOnSigint</code>: if <code>true</code>, the execution will be terminated when
 <code>SIGINT</code> (Ctrl+C) is received. Existing handlers for the
-event that have been attached via <code>process.on(&quot;SIGINT&quot;)</code> will be disabled
+event that have been attached via <code>process.on(&#39;SIGINT&#39;)</code> will be disabled
 during script execution, but will continue to work after that.
 If execution is terminated, an <a href="errors.html#errors_class_error"><code>Error</code></a> will be thrown.</li>
 </ul>
@@ -229,7 +273,7 @@ const sandbox = {
 
 const script = new vm.Script(&#39;count += 1; name = &quot;kitty&quot;;&#39;);
 
-const context = new vm.createContext(sandbox);
+const context = vm.createContext(sandbox);
 for (let i = 0; i &lt; 10; ++i) {
   script.runInContext(context);
 }
@@ -407,7 +451,7 @@ console.log(util.inspect(sandbox));
 <h2>vm.runInDebugContext(code)<span><a class="mark" href="#vm_vm_runindebugcontext_code" id="vm_vm_runindebugcontext_code">#</a></span></h2>
 <div class="api_metadata">
 <span>Added in: v0.11.14</span>
-</div><pre class="api_stability api_stability_0"><a href="documentation.html#documentation_stability_index">Stability: 0</a> - Deprecated. An alternative is in development.</pre><ul>
+</div><div class="api_stability api_stability_0"><a href="documentation.html#documentation_stability_index">Stability: 0</a> - Deprecated. An alternative is in development.</div><ul>
 <li><code>code</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&lt;string&gt;</a> The JavaScript code to compile and run.</li>
 </ul>
 <p>The <code>vm.runInDebugContext()</code> method compiles and executes <code>code</code> inside the V8
@@ -520,7 +564,7 @@ to the <code>http</code> module passed to it. For instance:</p>
 const vm = require(&#39;vm&#39;);
 
 const code = `
-(function(require) {
+((require) =&gt; {
   const http = require(&#39;http&#39;);
 
   http.createServer((request, response) =&gt; {

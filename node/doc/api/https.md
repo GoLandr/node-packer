@@ -1,5 +1,7 @@
 # HTTPS
 
+<!--introduced_in=v0.10.0-->
+
 > Stability: 2 - Stable
 
 HTTPS is the HTTP protocol over TLS/SSL. In Node.js this is implemented as a
@@ -10,7 +12,7 @@ separate module.
 added: v0.4.5
 -->
 
-An Agent object for HTTPS similar to [`http.Agent`][].  See [`https.request()`][]
+An Agent object for HTTPS similar to [`http.Agent`][]. See [`https.request()`][]
 for more information.
 
 ## Class: https.Server
@@ -21,11 +23,24 @@ added: v0.3.4
 This class is a subclass of `tls.Server` and emits events same as
 [`http.Server`][]. See [`http.Server`][] for more information.
 
+### server.close([callback])
+<!-- YAML
+added: v0.1.90
+-->
+- `callback` {Function}
+
+See [`server.close()`][`http.close()`] from the HTTP module for details.
+
+### server.listen()
+
+Starts the HTTPS server listening for encrypted connections.
+This method is identical to [`server.listen()`][] from [`net.Server`][].
+
 ### server.setTimeout([msecs][, callback])
 <!-- YAML
 added: v0.11.2
 -->
-- `msecs` {number} Defaults to 120000 (2 minutes).
+- `msecs` {number} **Default:** `120000` (2 minutes)
 - `callback` {Function}
 
 See [`http.Server#setTimeout()`][].
@@ -34,7 +49,7 @@ See [`http.Server#setTimeout()`][].
 <!-- YAML
 added: v0.11.2
 -->
-- {number} Defaults to 120000 (2 minutes).
+- {number} **Default:** `120000` (2 minutes)
 
 See [`http.Server#timeout`][].
 
@@ -42,7 +57,7 @@ See [`http.Server#timeout`][].
 <!-- YAML
 added: v8.0.0
 -->
-- {number} Defaults to 5000 (5 seconds).
+- {number} **Default:** `5000` (5 seconds)
 
 See [`http.Server#keepAliveTimeout`][].
 
@@ -50,7 +65,8 @@ See [`http.Server#keepAliveTimeout`][].
 <!-- YAML
 added: v0.3.4
 -->
-- `options` {Object} Accepts `options` from [`tls.createServer()`][] and [`tls.createSecureContext()`][].
+- `options` {Object} Accepts `options` from [`tls.createServer()`][],
+ [`tls.createSecureContext()`][] and [`http.createServer()`][].
 - `requestListener` {Function} A listener to be added to the `request` event.
 
 Example:
@@ -87,30 +103,6 @@ https.createServer(options, (req, res) => {
   res.end('hello world\n');
 }).listen(8000);
 ```
-
-### server.close([callback])
-<!-- YAML
-added: v0.1.90
--->
-- `callback` {Function}
-
-See [`http.close()`][] for details.
-
-### server.listen(handle[, callback])
-- `handle` {Object}
-- `callback` {Function}
-
-### server.listen(path[, callback])
-- `path` {string}
-- `callback` {Function}
-
-### server.listen([port][, host][, backlog][, callback])
-- `port` {number}
-- `hostname` {string}
-- `backlog` {number}
-- `callback` {Function}
-
-See [`http.listen()`][] for details.
 
 ## https.get(options[, callback])
 <!-- YAML
@@ -163,11 +155,11 @@ changes:
     pr-url: https://github.com/nodejs/node/pull/10638
     description: The `options` parameter can be a WHATWG `URL` object.
 -->
-- `options` {Object | string | URL} Accepts all `options` from [`http.request()`][],
-  with some differences in default values:
-  - `protocol` Defaults to `https:`
-  - `port` Defaults to `443`.
-  - `agent` Defaults to `https.globalAgent`.
+- `options` {Object | string | URL} Accepts all `options` from
+  [`http.request()`][], with some differences in default values:
+  - `protocol` **Default:** `https:`
+  - `port` **Default:** `443`
+  - `agent` **Default:** `https.globalAgent`
 - `callback` {Function}
 
 
@@ -264,12 +256,14 @@ const req = https.request(options, (res) => {
 [`http.Server#setTimeout()`]: http.html#http_server_settimeout_msecs_callback
 [`http.Server#timeout`]: http.html#http_server_timeout
 [`http.Server`]: http.html#http_class_http_server
+[`http.createServer()`]: http.html#httpcreateserveroptions-requestlistener
 [`http.close()`]: http.html#http_server_close_callback
 [`http.get()`]: http.html#http_http_get_options_callback
-[`http.listen()`]: http.html#http_server_listen_port_hostname_backlog_callback
 [`http.request()`]: http.html#http_http_request_options_callback
 [`https.Agent`]: #https_class_https_agent
 [`https.request()`]: #https_https_request_options_callback
+[`net.Server`]: net.html#net_class_net_server
+[`server.listen()`]: net.html#net_server_listen
 [`tls.connect()`]: tls.html#tls_tls_connect_options_callback
 [`tls.createSecureContext()`]: tls.html#tls_tls_createsecurecontext_options
 [`tls.createServer()`]: tls.html#tls_tls_createserver_options_secureconnectionlistener

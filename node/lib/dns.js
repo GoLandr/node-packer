@@ -21,12 +21,10 @@
 
 'use strict';
 
-const util = require('util');
-
 const cares = process.binding('cares_wrap');
-const uv = process.binding('uv');
-const internalNet = require('internal/net');
+const { isLegalPort } = require('internal/net');
 const { customPromisifyArgs } = require('internal/util');
+const errors = require('internal/errors');
 
 const {
   GetAddrInfoReqWrap,
@@ -35,33 +33,6 @@ const {
   ChannelWrap,
   isIP
 } = cares;
-
-const isLegalPort = internalNet.isLegalPort;
-
-
-function errnoException(err, syscall, hostname) {
-  // FIXME(bnoordhuis) Remove this backwards compatibility nonsense and pass
-  // the true error to the user. ENOTFOUND is not even a proper POSIX error!
-  if (err === uv.UV_EAI_MEMORY ||
-      err === uv.UV_EAI_NODATA ||
-      err === uv.UV_EAI_NONAME) {
-    err = 'ENOTFOUND';
-  }
-  var ex = null;
-  if (typeof err === 'string') {  // c-ares error code.
-    const errHost = hostname ? ' ' + hostname : '';
-    ex = new Error(`${syscall} ${err}${errHost}`);
-    ex.code = err;
-    ex.errno = err;
-    ex.syscall = syscall;
-  } else {
-    ex = util._errnoException(err, syscall);
-  }
-  if (hostname) {
-    ex.hostname = hostname;
-  }
-  return ex;
-}
 
 const IANA_DNS_PORT = 53;
 const digits = [
@@ -89,10 +60,11 @@ function isIPv4(str) {
   return (str.length > 3 && str.charCodeAt(3) === 46/*'.'*/);
 }
 
+const dnsException = errors.dnsException;
 
 function onlookup(err, addresses) {
   if (err) {
-    return this.callback(errnoException(err, 'getaddrinfo', this.hostname));
+    return this.callback(dnsException(err, 'getaddrinfo', this.hostname));
   }
   if (this.family) {
     this.callback(null, addresses[0], this.family);
@@ -104,7 +76,7 @@ function onlookup(err, addresses) {
 
 function onlookupall(err, addresses) {
   if (err) {
-    return this.callback(errnoException(err, 'getaddrinfo', this.hostname));
+    return this.callback(dnsException(err, 'getaddrinfo', this.hostname));
   }
 
   var family = this.family;
@@ -126,6 +98,7 @@ function lookup(hostname, options, callback) {
   var hints = 0;
   var family = -1;
   var all = false;
+  var verbatim = false;
 
   // Parse arguments
   if (hostname && typeof hostname !== 'string') {
@@ -140,6 +113,7 @@ function lookup(hostname, options, callback) {
     hints = options.hints >>> 0;
     family = options.family >>> 0;
     all = options.all === true;
+    verbatim = options.verbatim === true;
 
     if (hints !== 0 &&
         hints !== cares.AI_ADDRCONFIG &&
@@ -167,7 +141,7 @@ function lookup(hostname, options, callback) {
   if (matchedFamily) {
     if (all) {
       process.nextTick(
-        callback, null, [{address: hostname, family: matchedFamily}]);
+        callback, null, [{ address: hostname, family: matchedFamily }]);
     } else {
       process.nextTick(callback, null, hostname, matchedFamily);
     }
@@ -180,9 +154,9 @@ function lookup(hostname, options, callback) {
   req.hostname = hostname;
   req.oncomplete = all ? onlookupall : onlookup;
 
-  var err = cares.getaddrinfo(req, hostname, family, hints);
+  var err = cares.getaddrinfo(req, hostname, family, hints, verbatim);
   if (err) {
-    process.nextTick(callback, errnoException(err, 'getaddrinfo', hostname));
+    process.nextTick(callback, dnsException(err, 'getaddrinfo', hostname));
     return {};
   }
   return req;
@@ -194,7 +168,7 @@ Object.defineProperty(lookup, customPromisifyArgs,
 
 function onlookupservice(err, host, service) {
   if (err)
-    return this.callback(errnoException(err, 'getnameinfo', this.host));
+    return this.callback(dnsException(err, 'getnameinfo', this.host));
 
   this.callback(null, host, service);
 }
@@ -223,7 +197,7 @@ function lookupService(host, port, callback) {
   req.oncomplete = onlookupservice;
 
   var err = cares.getnameinfo(req, host, port);
-  if (err) throw errnoException(err, 'getnameinfo', host);
+  if (err) throw dnsException(err, 'getnameinfo', host);
   return req;
 }
 
@@ -236,7 +210,7 @@ function onresolve(err, result, ttls) {
     result = result.map((address, index) => ({ address, ttl: ttls[index] }));
 
   if (err)
-    this.callback(errnoException(err, this.bindingName, this.hostname));
+    this.callback(dnsException(err, this.bindingName, this.hostname));
   else
     this.callback(null, result);
 }
@@ -273,7 +247,7 @@ function resolver(bindingName) {
     req.oncomplete = onresolve;
     req.ttl = !!(options && options.ttl);
     var err = this._handle[bindingName](req, name);
-    if (err) throw errnoException(err, bindingName);
+    if (err) throw dnsException(err, bindingName);
     return req;
   }
   Object.defineProperty(query, 'name', { value: bindingName });
@@ -375,28 +349,44 @@ function setServers(servers) {
   }
 }
 
-const defaultResolver = new Resolver();
+let defaultResolver = new Resolver();
+
+const resolverKeys = [
+  'getServers',
+  'resolve',
+  'resolveAny',
+  'resolve4',
+  'resolve6',
+  'resolveCname',
+  'resolveMx',
+  'resolveNs',
+  'resolveTxt',
+  'resolveSrv',
+  'resolvePtr',
+  'resolveNaptr',
+  'resolveSoa',
+  'reverse'
+];
+
+function setExportsFunctions() {
+  resolverKeys.forEach((key) => {
+    module.exports[key] = defaultResolver[key].bind(defaultResolver);
+  });
+}
+
+function defaultResolverSetServers(servers) {
+  const resolver = new Resolver();
+  resolver.setServers(servers);
+  defaultResolver = resolver;
+  setExportsFunctions();
+}
 
 module.exports = {
   lookup,
   lookupService,
 
   Resolver,
-  getServers: defaultResolver.getServers.bind(defaultResolver),
-  setServers: defaultResolver.setServers.bind(defaultResolver),
-  resolve: defaultResolver.resolve.bind(defaultResolver),
-  resolveAny: defaultResolver.resolveAny.bind(defaultResolver),
-  resolve4: defaultResolver.resolve4.bind(defaultResolver),
-  resolve6: defaultResolver.resolve6.bind(defaultResolver),
-  resolveCname: defaultResolver.resolveCname.bind(defaultResolver),
-  resolveMx: defaultResolver.resolveMx.bind(defaultResolver),
-  resolveNs: defaultResolver.resolveNs.bind(defaultResolver),
-  resolveTxt: defaultResolver.resolveTxt.bind(defaultResolver),
-  resolveSrv: defaultResolver.resolveSrv.bind(defaultResolver),
-  resolvePtr: defaultResolver.resolvePtr.bind(defaultResolver),
-  resolveNaptr: defaultResolver.resolveNaptr.bind(defaultResolver),
-  resolveSoa: defaultResolver.resolveSoa.bind(defaultResolver),
-  reverse: defaultResolver.reverse.bind(defaultResolver),
+  setServers: defaultResolverSetServers,
 
   // uv_getaddrinfo flags
   ADDRCONFIG: cares.AI_ADDRCONFIG,
@@ -428,3 +418,5 @@ module.exports = {
   ADDRGETNETWORKPARAMS: 'EADDRGETNETWORKPARAMS',
   CANCELLED: 'ECANCELLED'
 };
+
+setExportsFunctions();

@@ -20,6 +20,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "node.h"
+#include <stdio.h>
 
 // --------- [Enclose.IO Hack start] ---------
 extern "C" {
@@ -29,6 +30,7 @@ extern "C" {
 // --------- [Enclose.IO Hack end] ---------
 
 #ifdef _WIN32
+#include <windows.h>
 #include <VersionHelpers.h>
 #include <WinError.h>
 
@@ -88,7 +90,7 @@ int wmain(int argc, wchar_t *wargv[]) {
     exit(ERROR_EXE_MACHINE_TYPE_MISMATCH);
   }
 
-  // Convert argv to to UTF8
+  // Convert argv to UTF8
   char** argv = new char*[argc + 1];
   for (int i = 0; i < argc; i++) {
     // Compute the size of the required buffer

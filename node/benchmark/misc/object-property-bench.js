@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable dot-notation */
+
 const common = require('../common.js');
 
 const bench = common.createBenchmark(main, {
@@ -63,6 +65,8 @@ function main(conf) {
   const n = +conf.millions * 1e6;
 
   switch (conf.method) {
+    // '' is a default case for tests
+    case '':
     case 'property':
       runProperty(n);
       break;

@@ -46,20 +46,21 @@ class NextTickQueue {
   }
 }
 
-function setupNextTick() {
+function setupNextTick(_setupNextTick, _setupPromises) {
   const async_wrap = process.binding('async_wrap');
-  const async_hooks = require('async_hooks');
+  const async_hooks = require('internal/async_hooks');
   const promises = require('internal/process/promises');
   const errors = require('internal/errors');
-  const emitPendingUnhandledRejections = promises.setup(scheduleMicrotasks);
-  const initTriggerId = async_hooks.initTriggerId;
+  const emitPendingUnhandledRejections = promises.setup(scheduleMicrotasks,
+                                                        _setupPromises);
+  const getDefaultTriggerAsyncId = async_hooks.getDefaultTriggerAsyncId;
   // Two arrays that share state between C++ and JS.
-  const { async_hook_fields, async_uid_fields } = async_wrap;
+  const { async_hook_fields, async_id_fields } = async_wrap;
   // Used to change the state of the async id stack.
   const { emitInit, emitBefore, emitAfter, emitDestroy } = async_hooks;
   // Grab the constants necessary for working with internal arrays.
-  const { kInit, kDestroy, kAsyncUidCntr } = async_wrap.constants;
-  const { async_id_symbol, trigger_id_symbol } = async_wrap;
+  const { kInit, kDestroy, kAsyncIdCounter } = async_wrap.constants;
+  const { async_id_symbol, trigger_async_id_symbol } = async_wrap;
   var nextTickQueue = new NextTickQueue();
   var microtasksScheduled = false;
 
@@ -81,7 +82,7 @@ function setupNextTick() {
   // This tickInfo thing is used so that the C++ code in src/node.cc
   // can have easy access to our nextTick state, and avoid unnecessary
   // calls into JS land.
-  const tickInfo = process._setupNextTick(_tickCallback, _runMicrotasks);
+  const tickInfo = _setupNextTick(_tickCallback, _runMicrotasks);
 
   _runMicrotasks = _runMicrotasks.runMicrotasks;
 
@@ -102,7 +103,7 @@ function setupNextTick() {
     args: undefined,
     domain: null,
     [async_id_symbol]: 0,
-    [trigger_id_symbol]: 0
+    [trigger_async_id_symbol]: 0
   };
   function scheduleMicrotasks() {
     if (microtasksScheduled)
@@ -158,10 +159,10 @@ function setupNextTick() {
 
         // CHECK(Number.isSafeInteger(tock[async_id_symbol]))
         // CHECK(tock[async_id_symbol] > 0)
-        // CHECK(Number.isSafeInteger(tock[trigger_id_symbol]))
-        // CHECK(tock[trigger_id_symbol] > 0)
+        // CHECK(Number.isSafeInteger(tock[trigger_async_id_symbol]))
+        // CHECK(tock[trigger_async_id_symbol] > 0)
 
-        emitBefore(tock[async_id_symbol], tock[trigger_id_symbol]);
+        emitBefore(tock[async_id_symbol], tock[trigger_async_id_symbol]);
         // emitDestroy() places the async_id_symbol into an asynchronous queue
         // that calls the destroy callback in the future. It's called before
         // calling tock.callback so destroy will be called even if the callback
@@ -203,10 +204,10 @@ function setupNextTick() {
 
         // CHECK(Number.isSafeInteger(tock[async_id_symbol]))
         // CHECK(tock[async_id_symbol] > 0)
-        // CHECK(Number.isSafeInteger(tock[trigger_id_symbol]))
-        // CHECK(tock[trigger_id_symbol] > 0)
+        // CHECK(Number.isSafeInteger(tock[trigger_async_id_symbol]))
+        // CHECK(tock[trigger_async_id_symbol] > 0)
 
-        emitBefore(tock[async_id_symbol], tock[trigger_id_symbol]);
+        emitBefore(tock[async_id_symbol], tock[trigger_async_id_symbol]);
         // TODO(trevnorris): See comment in _tickCallback() as to why this
         // isn't a good solution.
         if (async_hook_fields[kDestroy] > 0)
@@ -236,7 +237,7 @@ function setupNextTick() {
       this.args = args;
       this.domain = process.domain || null;
       this[async_id_symbol] = asyncId;
-      this[trigger_id_symbol] = triggerAsyncId;
+      this[trigger_async_id_symbol] = triggerAsyncId;
     }
   }
 
@@ -261,8 +262,8 @@ function setupNextTick() {
           args[i - 1] = arguments[i];
     }
 
-    const asyncId = ++async_uid_fields[kAsyncUidCntr];
-    const triggerAsyncId = initTriggerId();
+    const asyncId = ++async_id_fields[kAsyncIdCounter];
+    const triggerAsyncId = getDefaultTriggerAsyncId();
     const obj = new TickObject(callback, args, asyncId, triggerAsyncId);
     nextTickQueue.push(obj);
     ++tickInfo[kLength];
@@ -281,8 +282,8 @@ function setupNextTick() {
     if (process._exiting)
       return;
 
-    if (!Number.isSafeInteger(triggerAsyncId) || triggerAsyncId <= 0) {
-      triggerAsyncId = async_hooks.initTriggerId();
+    if (triggerAsyncId === null) {
+      triggerAsyncId = async_hooks.getDefaultTriggerAsyncId();
     }
 
     var args;
@@ -297,7 +298,7 @@ function setupNextTick() {
           args[i - 2] = arguments[i];
     }
 
-    const asyncId = ++async_uid_fields[kAsyncUidCntr];
+    const asyncId = ++async_id_fields[kAsyncIdCounter];
     const obj = new TickObject(callback, args, asyncId, triggerAsyncId);
     nextTickQueue.push(obj);
     ++tickInfo[kLength];

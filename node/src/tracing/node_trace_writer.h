@@ -13,11 +13,11 @@ namespace tracing {
 
 using v8::platform::tracing::TraceObject;
 using v8::platform::tracing::TraceWriter;
-using v8::platform::tracing::TracingController;
 
 class NodeTraceWriter : public TraceWriter {
  public:
-  explicit NodeTraceWriter(uv_loop_t* tracing_loop);
+  explicit NodeTraceWriter(const std::string& log_file_pattern,
+                           uv_loop_t* tracing_loop);
   ~NodeTraceWriter();
 
   void AppendTraceEvent(TraceObject* trace_event) override;
@@ -63,6 +63,7 @@ class NodeTraceWriter : public TraceWriter {
   int highest_request_id_completed_ = 0;
   int total_traces_ = 0;
   int file_num_ = 0;
+  const std::string& log_file_pattern_;
   std::ostringstream stream_;
   TraceWriter* json_trace_writer_ = nullptr;
   bool exited_ = false;

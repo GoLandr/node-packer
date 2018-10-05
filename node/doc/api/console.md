@@ -1,5 +1,7 @@
 # Console
 
+<!--introduced_in=v0.10.13-->
+
 > Stability: 2 - Stable
 
 The `console` module provides a simple debugging console that is similar to the
@@ -10,7 +12,7 @@ The module exports two specific components:
 * A `Console` class with methods such as `console.log()`, `console.error()` and
   `console.warn()` that can be used to write to any Node.js stream.
 * A global `console` instance configured to write to [`process.stdout`][] and
-  [`process.stderr`][].  The global `console` can be used without calling
+  [`process.stderr`][]. The global `console` can be used without calling
   `require('console')`.
 
 ***Warning***: The global console object's methods are neither consistently
@@ -76,13 +78,12 @@ const { Console } = console;
 ```
 
 ### new Console(stdout[, stderr])
-* `stdout` {Writable}
-* `stderr` {Writable}
+* `stdout` {stream.Writable}
+* `stderr` {stream.Writable}
 
-Creates a new `Console` by passing one or two writable stream instances.
-`stdout` is a writable stream to print log or info output. `stderr`
-is used for warning or error output. If `stderr` is not passed, warning and error
-output will be sent to `stdout`.
+Creates a new `Console` with one or two writable stream instances. `stdout` is a
+writable stream to print log or info output. `stderr` is used for warning or
+error output. If `stderr` is not provided, `stdout` is used for `stderr`.
 
 ```js
 const output = fs.createWriteStream('./stdout.log');
@@ -186,7 +187,7 @@ binary.
 added: v8.3.0
 -->
 
-* `label` {string} The display label for the counter. Defaults to `'default'`.
+* `label` {string} The display label for the counter. **Default:** `'default'`.
 
 Maintains an internal counter specific to `label` and outputs to `stdout` the
 number of times `console.count()` has been called with the given `label`.
@@ -214,12 +215,12 @@ undefined
 >
 ```
 
-### console.countReset([label = 'default'])
+### console.countReset([label='default'])
 <!-- YAML
 added: v8.3.0
 -->
 
-* `label` {string} The display label for the counter. Defaults to `'default'`.
+* `label` {string} The display label for the counter. **Default:** `'default'`.
 
 Resets the internal counter specific to `label`.
 
@@ -236,31 +237,32 @@ undefined
 >
 ```
 
+### console.debug(data[, ...args])
+<!-- YAML
+added: v8.0.0
+-->
+* `data` {any}
+* `...args` {any}
+
+The `console.debug()` function is an alias for [`console.log()`][].
+
 ### console.dir(obj[, options])
 <!-- YAML
 added: v0.1.101
 -->
 * `obj` {any}
 * `options` {Object}
-  * `showHidden` {boolean}
-  * `depth` {number}
-  * `colors` {boolean}
+  * `showHidden` {boolean} If `true` then the object's non-enumerable and symbol
+    properties will be shown too. **Default:** `false`.
+  * `depth` {number} Tells [`util.inspect()`][] how many times to recurse while
+    formatting the object. This is useful for inspecting large complicated
+    objects. To make it recurse indefinitely, pass `null`. **Default:** `2`.
+  * `colors` {boolean} If `true`, then the output will be styled with ANSI color
+     codes. Colors are customizable;
+     see [customizing `util.inspect()` colors][]. **Default:** `false`.
 
 Uses [`util.inspect()`][] on `obj` and prints the resulting string to `stdout`.
-This function bypasses any custom `inspect()` function defined on `obj`. An
-optional `options` object may be passed to alter certain aspects of the
-formatted string:
-
-- `showHidden` - if `true` then the object's non-enumerable and symbol
-properties will be shown too. Defaults to `false`.
-
-- `depth` - tells [`util.inspect()`][] how many times to recurse while
-formatting the object. This is useful for inspecting large complicated objects.
-Defaults to `2`. To make it recurse indefinitely, pass `null`.
-
-- `colors` - if `true`, then the output will be styled with ANSI color codes.
-Defaults to `false`. Colors are customizable; see
-[customizing `util.inspect()` colors][].
+This function bypasses any custom `inspect()` function defined on `obj`.
 
 ### console.error([data][, ...args])
 <!-- YAML
@@ -285,6 +287,32 @@ console.error('error', code);
 If formatting elements (e.g. `%d`) are not found in the first string then
 [`util.inspect()`][] is called on each argument and the resulting string
 values are concatenated. See [`util.format()`][] for more information.
+
+### console.group([...label])
+<!-- YAML
+added: v8.5.0
+-->
+
+* `...label` {any}
+
+Increases indentation of subsequent lines by two spaces.
+
+If one or more `label`s are provided, those are printed first without the
+additional indentation.
+
+### console.groupCollapsed()
+<!-- YAML
+  added: v8.5.0
+-->
+
+An alias for [`console.group()`][].
+
+### console.groupEnd()
+<!-- YAML
+added: v8.5.0
+-->
+
+Decreases indentation of subsequent lines by two spaces.
 
 ### console.info([data][, ...args])
 <!-- YAML
@@ -390,6 +418,7 @@ added: v0.1.100
 The `console.warn()` function is an alias for [`console.error()`][].
 
 [`console.error()`]: #console_console_error_data_args
+[`console.group()`]: #console_console_group_label
 [`console.log()`]: #console_console_log_data_args
 [`console.time()`]: #console_console_time_label
 [`console.timeEnd()`]: #console_console_timeend_label

@@ -1,7 +1,7 @@
 'use strict';
 
-const Buffer = require('buffer').Buffer;
-const Writable = require('stream').Writable;
+const { Buffer } = require('buffer');
+const { Writable } = require('stream');
 const fs = require('fs');
 const util = require('util');
 
@@ -46,10 +46,14 @@ function stringToFlags(flag) {
     case 'a' : return O_APPEND | O_CREAT | O_WRONLY;
     case 'ax' : // Fall through.
     case 'xa' : return O_APPEND | O_CREAT | O_WRONLY | O_EXCL;
+    case 'as' : // Fall through.
+    case 'sa' : return O_APPEND | O_CREAT | O_WRONLY | O_SYNC;
 
     case 'a+' : return O_APPEND | O_CREAT | O_RDWR;
     case 'ax+': // Fall through.
     case 'xa+': return O_APPEND | O_CREAT | O_RDWR | O_EXCL;
+    case 'as+': // Fall through.
+    case 'sa+': return O_APPEND | O_CREAT | O_RDWR | O_SYNC;
   }
 
   throw new Error('Unknown file open flag: ' + flag);

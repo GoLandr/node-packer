@@ -1,7 +1,6 @@
 #include "inspector_io.h"
 
 #include "inspector_socket_server.h"
-#include "env.h"
 #include "env-inl.h"
 #include "node.h"
 #include "node_crypto.h"
@@ -26,17 +25,6 @@ using v8_inspector::StringView;
 
 template<typename Transport>
 using TransportAndIo = std::pair<Transport*, InspectorIo*>;
-
-std::string GetProcessTitle() {
-  char title[2048];
-  int err = uv_get_process_title(title, sizeof(title));
-  if (err == 0) {
-    return title;
-  } else {
-    // Title is too long, or could not be retrieved.
-    return "Node.js";
-  }
-}
 
 std::string ScriptPath(uv_loop_t* loop, const std::string& script_name) {
   std::string script_path;
@@ -86,11 +74,11 @@ std::string StringViewToUtf8(const StringView& view) {
 
   size_t result_length = view.length() * sizeof(*source);
   std::string result(result_length, '\0');
-  UnicodeString utf16(unicodeSource, view.length());
+  icu::UnicodeString utf16(unicodeSource, view.length());
   // ICU components for std::string compatibility are not enabled in build...
   bool done = false;
   while (!done) {
-    CheckedArrayByteSink sink(&result[0], result_length);
+    icu::CheckedArrayByteSink sink(&result[0], result_length);
     utf16.toUTF8(sink);
     result_length = sink.NumberOfBytesAppended();
     result.resize(result_length);
@@ -115,16 +103,17 @@ int CloseAsyncAndLoop(uv_async_t* async) {
 
 // Delete main_thread_req_ on async handle close
 void ReleasePairOnAsyncClose(uv_handle_t* async) {
-  AsyncAndAgent* pair = node::ContainerOf(&AsyncAndAgent::first,
-                                          reinterpret_cast<uv_async_t*>(async));
-  delete pair;
+  std::unique_ptr<AsyncAndAgent> pair(node::ContainerOf(&AsyncAndAgent::first,
+      reinterpret_cast<uv_async_t*>(async)));
+  // Unique_ptr goes out of scope here and pointer is deleted.
 }
 
 }  // namespace
 
 std::unique_ptr<StringBuffer> Utf8ToStringView(const std::string& message) {
-  UnicodeString utf16 =
-      UnicodeString::fromUTF8(StringPiece(message.data(), message.length()));
+  icu::UnicodeString utf16 =
+    icu::UnicodeString::fromUTF8(icu::StringPiece(message.data(),
+      message.length()));
   StringView view(reinterpret_cast<const uint16_t*>(utf16.getBuffer()),
                   utf16.length());
   return StringBuffer::create(view);
@@ -485,7 +474,7 @@ std::vector<std::string> InspectorIoDelegate::GetTargetIds() {
 }
 
 std::string InspectorIoDelegate::GetTargetTitle(const std::string& id) {
-  return script_name_.empty() ? GetProcessTitle() : script_name_;
+  return script_name_.empty() ? GetHumanReadableProcessName() : script_name_;
 }
 
 std::string InspectorIoDelegate::GetTargetUrl(const std::string& id) {

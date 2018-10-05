@@ -1,26 +1,23 @@
 'use strict';
 
+const errors = require('internal/errors');
 const util = require('util');
+const constants = process.binding('constants').os.signals;
 
-var _lazyConstants = null;
-
-function lazyConstants() {
-  if (!_lazyConstants) {
-    _lazyConstants = process.binding('constants').os.signals;
-  }
-  return _lazyConstants;
-}
+const internalBinding = process._internalBinding;
+delete process._internalBinding;
 
 const assert = process.assert = function(x, msg) {
   if (!x) throw new Error(msg || 'assertion error');
 };
 
 
-// Set up the process.cpuUsage() function.
-function setup_cpuUsage() {
-  // Get the native function, which will be replaced with a JS version.
-  const _cpuUsage = process.cpuUsage;
+function setup_performance() {
+  require('perf_hooks');
+}
 
+// Set up the process.cpuUsage() function.
+function setup_cpuUsage(_cpuUsage) {
   // Create the argument array that will be passed to the native function.
   const cpuValues = new Float64Array(2);
 
@@ -71,8 +68,7 @@ function setup_cpuUsage() {
 // The 3 entries filled in by the original process.hrtime contains
 // the upper/lower 32 bits of the second part of the value,
 // and the remaining nanoseconds of the value.
-function setup_hrtime() {
-  const _hrtime = process.hrtime;
+function setup_hrtime(_hrtime) {
   const hrValues = new Uint32Array(3);
 
   process.hrtime = function hrtime(time) {
@@ -96,12 +92,11 @@ function setup_hrtime() {
   };
 }
 
-function setupMemoryUsage() {
-  const memoryUsage_ = process.memoryUsage;
+function setupMemoryUsage(_memoryUsage) {
   const memValues = new Float64Array(4);
 
   process.memoryUsage = function memoryUsage() {
-    memoryUsage_(memValues);
+    _memoryUsage(memValues);
     return {
       rss: memValues[0],
       heapTotal: memValues[1],
@@ -114,15 +109,8 @@ function setupMemoryUsage() {
 function setupConfig(_source) {
   // NativeModule._source
   // used for `process.config`, but not a real module
-  var config = _source.config;
+  const config = _source.config;
   delete _source.config;
-
-  // strip the gyp comment line at the beginning
-  config = config.split('\n')
-      .slice(1)
-      .join('\n')
-      .replace(/"/g, '\\"')
-      .replace(/'/g, '"');
 
   process.config = JSON.parse(config, function(key, value) {
     if (value === 'true') return true;
@@ -173,15 +161,15 @@ function setupKillAndExit() {
       err = process._kill(pid, 0);
     } else {
       sig = sig || 'SIGTERM';
-      if (lazyConstants()[sig]) {
-        err = process._kill(pid, lazyConstants()[sig]);
+      if (constants[sig]) {
+        err = process._kill(pid, constants[sig]);
       } else {
         throw new Error(`Unknown signal: ${sig}`);
       }
     }
 
     if (err)
-      throw util._errnoException(err, 'kill');
+      throw errors.errnoException(err, 'kill');
 
     return true;
   };
@@ -194,7 +182,7 @@ function setupSignalHandlers() {
   const signalWraps = {};
 
   function isSignal(event) {
-    return typeof event === 'string' && lazyConstants()[event] !== undefined;
+    return typeof event === 'string' && constants[event] !== undefined;
   }
 
   // Detect presence of a listener for the special signal types
@@ -206,13 +194,13 @@ function setupSignalHandlers() {
 
       wrap.unref();
 
-      wrap.onsignal = function() { process.emit(type); };
+      wrap.onsignal = function() { process.emit(type, type); };
 
-      const signum = lazyConstants()[type];
+      const signum = constants[type];
       const err = wrap.start(signum);
       if (err) {
         wrap.close();
-        throw util._errnoException(err, 'uv_signal_start');
+        throw errors.errnoException(err, 'uv_signal_start');
       }
 
       signalWraps[type] = wrap;
@@ -251,14 +239,14 @@ function setupChannel() {
 }
 
 
-function setupRawDebug() {
-  const rawDebug = process._rawDebug;
+function setupRawDebug(_rawDebug) {
   process._rawDebug = function() {
-    rawDebug(util.format.apply(null, arguments));
+    _rawDebug(util.format.apply(null, arguments));
   };
 }
 
 module.exports = {
+  setup_performance,
   setup_cpuUsage,
   setup_hrtime,
   setupMemoryUsage,
@@ -266,5 +254,6 @@ module.exports = {
   setupKillAndExit,
   setupSignalHandlers,
   setupChannel,
-  setupRawDebug
+  setupRawDebug,
+  internalBinding
 };

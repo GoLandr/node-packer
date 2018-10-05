@@ -4,6 +4,7 @@
     {
       "textRaw": "HTTPS",
       "name": "https",
+      "introduced_in": "v0.10.0",
       "stability": 2,
       "stabilityText": "Stable",
       "desc": "<p>HTTPS is the HTTP protocol over TLS/SSL. In Node.js this is implemented as a\nseparate module.</p>\n",
@@ -18,7 +19,7 @@
             ],
             "changes": []
           },
-          "desc": "<p>An Agent object for HTTPS similar to <a href=\"http.html#http_class_http_agent\"><code>http.Agent</code></a>.  See <a href=\"#https_https_request_options_callback\"><code>https.request()</code></a>\nfor more information.</p>\n"
+          "desc": "<p>An Agent object for HTTPS similar to <a href=\"http.html#http_class_http_agent\"><code>http.Agent</code></a>. See <a href=\"#https_https_request_options_callback\"><code>https.request()</code></a>\nfor more information.</p>\n"
         },
         {
           "textRaw": "Class: https.Server",
@@ -31,125 +32,6 @@
             "changes": []
           },
           "desc": "<p>This class is a subclass of <code>tls.Server</code> and emits events same as\n<a href=\"http.html#http_class_http_server\"><code>http.Server</code></a>. See <a href=\"http.html#http_class_http_server\"><code>http.Server</code></a> for more information.</p>\n",
-          "methods": [
-            {
-              "textRaw": "server.setTimeout([msecs][, callback])",
-              "type": "method",
-              "name": "setTimeout",
-              "meta": {
-                "added": [
-                  "v0.11.2"
-                ],
-                "changes": []
-              },
-              "signatures": [
-                {
-                  "params": [
-                    {
-                      "textRaw": "`msecs` {number} Defaults to 120000 (2 minutes). ",
-                      "name": "msecs",
-                      "type": "number",
-                      "desc": "Defaults to 120000 (2 minutes).",
-                      "optional": true
-                    },
-                    {
-                      "textRaw": "`callback` {Function} ",
-                      "name": "callback",
-                      "type": "Function",
-                      "optional": true
-                    }
-                  ]
-                },
-                {
-                  "params": [
-                    {
-                      "name": "msecs",
-                      "optional": true
-                    },
-                    {
-                      "name": "callback",
-                      "optional": true
-                    }
-                  ]
-                }
-              ],
-              "desc": "<p>See <a href=\"http.html#http_server_settimeout_msecs_callback\"><code>http.Server#setTimeout()</code></a>.</p>\n"
-            }
-          ],
-          "properties": [
-            {
-              "textRaw": "`timeout` {number} Defaults to 120000 (2 minutes). ",
-              "type": "number",
-              "name": "timeout",
-              "meta": {
-                "added": [
-                  "v0.11.2"
-                ],
-                "changes": []
-              },
-              "desc": "<p>See <a href=\"http.html#http_server_timeout\"><code>http.Server#timeout</code></a>.</p>\n",
-              "shortDesc": "Defaults to 120000 (2 minutes)."
-            },
-            {
-              "textRaw": "`keepAliveTimeout` {number} Defaults to 5000 (5 seconds). ",
-              "type": "number",
-              "name": "keepAliveTimeout",
-              "meta": {
-                "added": [
-                  "v8.0.0"
-                ],
-                "changes": []
-              },
-              "desc": "<p>See <a href=\"http.html#http_server_keepalivetimeout\"><code>http.Server#keepAliveTimeout</code></a>.</p>\n",
-              "shortDesc": "Defaults to 5000 (5 seconds)."
-            }
-          ]
-        }
-      ],
-      "methods": [
-        {
-          "textRaw": "https.createServer([options][, requestListener])",
-          "type": "method",
-          "name": "createServer",
-          "meta": {
-            "added": [
-              "v0.3.4"
-            ],
-            "changes": []
-          },
-          "signatures": [
-            {
-              "params": [
-                {
-                  "textRaw": "`options` {Object} Accepts `options` from [`tls.createServer()`][] and [`tls.createSecureContext()`][]. ",
-                  "name": "options",
-                  "type": "Object",
-                  "desc": "Accepts `options` from [`tls.createServer()`][] and [`tls.createSecureContext()`][].",
-                  "optional": true
-                },
-                {
-                  "textRaw": "`requestListener` {Function} A listener to be added to the `request` event. ",
-                  "name": "requestListener",
-                  "type": "Function",
-                  "desc": "A listener to be added to the `request` event.",
-                  "optional": true
-                }
-              ]
-            },
-            {
-              "params": [
-                {
-                  "name": "options",
-                  "optional": true
-                },
-                {
-                  "name": "requestListener",
-                  "optional": true
-                }
-              ]
-            }
-          ],
-          "desc": "<p>Example:</p>\n<pre><code class=\"lang-js\">// curl -k https://localhost:8000/\nconst https = require(&#39;https&#39;);\nconst fs = require(&#39;fs&#39;);\n\nconst options = {\n  key: fs.readFileSync(&#39;test/fixtures/keys/agent2-key.pem&#39;),\n  cert: fs.readFileSync(&#39;test/fixtures/keys/agent2-cert.pem&#39;)\n};\n\nhttps.createServer(options, (req, res) =&gt; {\n  res.writeHead(200);\n  res.end(&#39;hello world\\n&#39;);\n}).listen(8000);\n</code></pre>\n<p>Or</p>\n<pre><code class=\"lang-js\">const https = require(&#39;https&#39;);\nconst fs = require(&#39;fs&#39;);\n\nconst options = {\n  pfx: fs.readFileSync(&#39;test/fixtures/test_cert.pfx&#39;),\n  passphrase: &#39;sample&#39;\n};\n\nhttps.createServer(options, (req, res) =&gt; {\n  res.writeHead(200);\n  res.end(&#39;hello world\\n&#39;);\n}).listen(8000);\n</code></pre>\n",
           "methods": [
             {
               "textRaw": "server.close([callback])",
@@ -181,64 +63,36 @@
                   ]
                 }
               ],
-              "desc": "<p>See <a href=\"http.html#http_server_close_callback\"><code>http.close()</code></a> for details.</p>\n"
+              "desc": "<p>See <a href=\"http.html#http_server_close_callback\"><code>server.close()</code></a> from the HTTP module for details.</p>\n"
             },
             {
-              "textRaw": "server.listen(path[, callback])",
+              "textRaw": "server.listen()",
               "type": "method",
               "name": "listen",
+              "desc": "<p>Starts the HTTPS server listening for encrypted connections.\nThis method is identical to <a href=\"net.html#net_server_listen\"><code>server.listen()</code></a> from <a href=\"net.html#net_class_net_server\"><code>net.Server</code></a>.</p>\n",
               "signatures": [
                 {
-                  "params": [
-                    {
-                      "textRaw": "`path` {string} ",
-                      "name": "path",
-                      "type": "string"
-                    },
-                    {
-                      "textRaw": "`callback` {Function} ",
-                      "name": "callback",
-                      "type": "Function",
-                      "optional": true
-                    }
-                  ]
-                },
-                {
-                  "params": [
-                    {
-                      "name": "path"
-                    },
-                    {
-                      "name": "callback",
-                      "optional": true
-                    }
-                  ]
+                  "params": []
                 }
-              ],
-              "desc": "<p>See <a href=\"http.html#http_server_listen_port_hostname_backlog_callback\"><code>http.listen()</code></a> for details.</p>\n"
+              ]
             },
             {
-              "textRaw": "server.listen([port][, host][, backlog][, callback])",
+              "textRaw": "server.setTimeout([msecs][, callback])",
               "type": "method",
-              "name": "listen",
+              "name": "setTimeout",
+              "meta": {
+                "added": [
+                  "v0.11.2"
+                ],
+                "changes": []
+              },
               "signatures": [
                 {
                   "params": [
                     {
-                      "textRaw": "`port` {number} ",
-                      "name": "port",
-                      "type": "number",
-                      "optional": true
-                    },
-                    {
-                      "textRaw": "`hostname` {string} ",
-                      "name": "hostname",
-                      "type": "string",
-                      "optional": true
-                    },
-                    {
-                      "textRaw": "`backlog` {number} ",
-                      "name": "backlog",
+                      "textRaw": "`msecs` {number} **Default:** `120000` (2 minutes) ",
+                      "name": "msecs",
+                      "default": "`120000` (2 minutes)",
                       "type": "number",
                       "optional": true
                     },
@@ -253,15 +107,7 @@
                 {
                   "params": [
                     {
-                      "name": "port",
-                      "optional": true
-                    },
-                    {
-                      "name": "host",
-                      "optional": true
-                    },
-                    {
-                      "name": "backlog",
+                      "name": "msecs",
                       "optional": true
                     },
                     {
@@ -271,9 +117,83 @@
                   ]
                 }
               ],
-              "desc": "<p>See <a href=\"http.html#http_server_listen_port_hostname_backlog_callback\"><code>http.listen()</code></a> for details.</p>\n"
+              "desc": "<p>See <a href=\"http.html#http_server_settimeout_msecs_callback\"><code>http.Server#setTimeout()</code></a>.</p>\n"
+            }
+          ],
+          "properties": [
+            {
+              "textRaw": "`timeout` {number} **Default:** `120000` (2 minutes) ",
+              "type": "number",
+              "name": "timeout",
+              "meta": {
+                "added": [
+                  "v0.11.2"
+                ],
+                "changes": []
+              },
+              "default": "`120000` (2 minutes)",
+              "desc": "<p>See <a href=\"http.html#http_server_timeout\"><code>http.Server#timeout</code></a>.</p>\n"
+            },
+            {
+              "textRaw": "`keepAliveTimeout` {number} **Default:** `5000` (5 seconds) ",
+              "type": "number",
+              "name": "keepAliveTimeout",
+              "meta": {
+                "added": [
+                  "v8.0.0"
+                ],
+                "changes": []
+              },
+              "default": "`5000` (5 seconds)",
+              "desc": "<p>See <a href=\"http.html#http_server_keepalivetimeout\"><code>http.Server#keepAliveTimeout</code></a>.</p>\n"
             }
           ]
+        }
+      ],
+      "methods": [
+        {
+          "textRaw": "https.createServer([options][, requestListener])",
+          "type": "method",
+          "name": "createServer",
+          "meta": {
+            "added": [
+              "v0.3.4"
+            ],
+            "changes": []
+          },
+          "signatures": [
+            {
+              "params": [
+                {
+                  "textRaw": "`options` {Object} Accepts `options` from [`tls.createServer()`][], [`tls.createSecureContext()`][] and [`http.createServer()`][]. ",
+                  "name": "options",
+                  "type": "Object",
+                  "desc": "Accepts `options` from [`tls.createServer()`][], [`tls.createSecureContext()`][] and [`http.createServer()`][].",
+                  "optional": true
+                },
+                {
+                  "textRaw": "`requestListener` {Function} A listener to be added to the `request` event. ",
+                  "name": "requestListener",
+                  "type": "Function",
+                  "desc": "A listener to be added to the `request` event.",
+                  "optional": true
+                }
+              ]
+            },
+            {
+              "params": [
+                {
+                  "name": "options",
+                  "optional": true
+                },
+                {
+                  "name": "requestListener",
+                  "optional": true
+                }
+              ]
+            }
+          ],
+          "desc": "<p>Example:</p>\n<pre><code class=\"lang-js\">// curl -k https://localhost:8000/\nconst https = require(&#39;https&#39;);\nconst fs = require(&#39;fs&#39;);\n\nconst options = {\n  key: fs.readFileSync(&#39;test/fixtures/keys/agent2-key.pem&#39;),\n  cert: fs.readFileSync(&#39;test/fixtures/keys/agent2-cert.pem&#39;)\n};\n\nhttps.createServer(options, (req, res) =&gt; {\n  res.writeHead(200);\n  res.end(&#39;hello world\\n&#39;);\n}).listen(8000);\n</code></pre>\n<p>Or</p>\n<pre><code class=\"lang-js\">const https = require(&#39;https&#39;);\nconst fs = require(&#39;fs&#39;);\n\nconst options = {\n  pfx: fs.readFileSync(&#39;test/fixtures/test_cert.pfx&#39;),\n  passphrase: &#39;sample&#39;\n};\n\nhttps.createServer(options, (req, res) =&gt; {\n  res.writeHead(200);\n  res.end(&#39;hello world\\n&#39;);\n}).listen(8000);\n</code></pre>\n"
         },
         {
           "textRaw": "https.get(options[, callback])",
@@ -345,19 +265,19 @@
                   "textRaw": "`options` {Object | string | URL} Accepts all `options` from [`http.request()`][], with some differences in default values: ",
                   "options": [
                     {
-                      "textRaw": "`protocol` Defaults to `https:` ",
+                      "textRaw": "`protocol` **Default:** `https:` ",
                       "name": "protocol",
-                      "desc": "Defaults to `https:`"
+                      "default": "`https:`"
                     },
                     {
-                      "textRaw": "`port` Defaults to `443`. ",
+                      "textRaw": "`port` **Default:** `443` ",
                       "name": "port",
-                      "desc": "Defaults to `443`."
+                      "default": "`443`"
                     },
                     {
-                      "textRaw": "`agent` Defaults to `https.globalAgent`. ",
+                      "textRaw": "`agent` **Default:** `https.globalAgent` ",
                       "name": "agent",
-                      "desc": "Defaults to `https.globalAgent`."
+                      "default": "`https.globalAgent`"
                     }
                   ],
                   "name": "options",

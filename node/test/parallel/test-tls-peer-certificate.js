@@ -20,17 +20,17 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 'use strict';
-const common = require('../common');
+require('../common');
+const fixtures = require('../common/fixtures');
 
 // Verify that detailed getPeerCertificate() return value has all certs.
 
-const join = require('path').join;
 const {
   assert, connect, debug, keys
-} = require(join(common.fixturesDir, 'tls-connect'));
+} = require(fixtures.path('tls-connect'));
 
 connect({
-  client: {rejectUnauthorized: false},
+  client: { rejectUnauthorized: false },
   server: keys.agent1,
 }, function(err, pair, cleanup) {
   assert.ifError(err);
@@ -43,18 +43,19 @@ connect({
 
   assert.ok(peerCert.issuerCertificate);
   assert.strictEqual(peerCert.subject.emailAddress, 'ry@tinyclouds.org');
-  assert.strictEqual(peerCert.serialNumber, '9A84ABCFB8A72AC0');
+  assert.strictEqual(peerCert.serialNumber, 'FAD50CC6A07F516C');
   assert.strictEqual(peerCert.exponent, '0x10001');
   assert.strictEqual(
     peerCert.fingerprint,
-    '8D:06:3A:B3:E5:8B:85:29:72:4F:7D:1B:54:CD:95:19:3C:EF:6F:AA'
+    '6E:C0:F0:78:84:56:93:02:C9:07:AD:0C:6D:96:80:CC:85:6D:CE:3B'
   );
+
   assert.deepStrictEqual(peerCert.infoAccess['OCSP - URI'],
                          [ 'http://ocsp.nodejs.org/' ]);
 
   const issuer = peerCert.issuerCertificate;
   assert.strictEqual(issuer.issuerCertificate, issuer);
-  assert.strictEqual(issuer.serialNumber, '8DF21C01468AF393');
+  assert.strictEqual(issuer.serialNumber, 'EE586A7D0951D7B3');
 
   return cleanup();
 });

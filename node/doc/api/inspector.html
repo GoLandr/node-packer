@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Inspector | Node.js v8.4.0 Documentation</title>
+  <meta name="viewport" content="width=device-width">
+  <title>Inspector | Node.js v8.12.0 Documentation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic">
   <link rel="stylesheet" href="assets/style.css">
   <link rel="stylesheet" href="assets/sh.css">
@@ -37,6 +38,7 @@
 <li><a class="nav-deprecations" href="deprecations.html">Deprecated APIs</a></li>
 <li><a class="nav-dns" href="dns.html">DNS</a></li>
 <li><a class="nav-domain" href="domain.html">Domain</a></li>
+<li><a class="nav-esm" href="esm.html">ECMAScript Modules</a></li>
 <li><a class="nav-errors" href="errors.html">Errors</a></li>
 <li><a class="nav-events" href="events.html">Events</a></li>
 <li><a class="nav-fs" href="fs.html">File System</a></li>
@@ -50,6 +52,7 @@
 <li><a class="nav-net" href="net.html">Net</a></li>
 <li><a class="nav-os" href="os.html">OS</a></li>
 <li><a class="nav-path" href="path.html">Path</a></li>
+<li><a class="nav-perf_hooks" href="perf_hooks.html">Performance Hooks</a></li>
 <li><a class="nav-process" href="process.html">Process</a></li>
 <li><a class="nav-punycode" href="punycode.html">Punycode</a></li>
 <li><a class="nav-querystring" href="querystring.html">Query Strings</a></li>
@@ -72,20 +75,32 @@
 
 <ul>
 <li><a class="nav-https-github-com-nodejs-node" href="https://github.com/nodejs/node">GitHub Repo &amp; Issue Tracker</a></li>
-<li><a class="nav-http-groups-google-com-group-nodejs" href="http://groups.google.com/group/nodejs">Mailing List</a></li>
+<li><a class="nav-https-groups-google-com-group-nodejs" href="https://groups.google.com/group/nodejs">Mailing List</a></li>
 </ul>
 
     </div>
 
     <div id="column1" data-id="inspector" class="interior">
       <header>
-        <h1>Node.js v8.4.0 Documentation</h1>
+        <h1>Node.js v8.12.0 Documentation</h1>
         <div id="gtoc">
-          <p>
-            <a href="index.html" name="toc">Index</a> |
-            <a href="all.html">View on single page</a> |
-            <a href="inspector.json">View as JSON</a>
-          </p>
+          <ul>
+            <li>
+              <a href="index.html" name="toc">Index</a>
+            </li>
+            <li>
+              <a href="all.html">View on single page</a>
+            </li>
+            <li>
+              <a href="inspector.json">View as JSON</a>
+            </li>
+            
+    <li class="version-picker">
+      <a href="#">View another version <span>&#x25bc;</span></a>
+      <ol class="version-picker"><li><a href="https://nodejs.org/docs/latest-v9.x/api/inspector.html">9.x</a></li></ol>
+    </li>
+  
+          </ul>
         </div>
         <hr>
       </header>
@@ -108,6 +123,10 @@
 <li><span class="stability_undefined"><a href="#inspector_session_disconnect">session.disconnect()</a></span></li>
 </ul>
 </li>
+<li><span class="stability_undefined"><a href="#inspector_example_usage">Example usage</a></span><ul>
+<li><span class="stability_undefined"><a href="#inspector_cpu_profiler">CPU Profiler</a></span></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -116,21 +135,22 @@
 
       <div id="apicontent">
         <h1>Inspector<span><a class="mark" href="#inspector_inspector" id="inspector_inspector">#</a></span></h1>
-<pre class="api_stability api_stability_1"><a href="documentation.html#documentation_stability_index">Stability: 1</a> - Experimental</pre><p>The <code>inspector</code> module provides an API for interacting with the V8 inspector.</p>
+<!--introduced_in=v8.0.0-->
+<div class="api_stability api_stability_1"><a href="documentation.html#documentation_stability_index">Stability: 1</a> - Experimental</div><p>The <code>inspector</code> module provides an API for interacting with the V8 inspector.</p>
 <p>It can be accessed using:</p>
 <pre><code class="lang-js">const inspector = require(&#39;inspector&#39;);
 </code></pre>
 <h2>inspector.open([port[, host[, wait]]])<span><a class="mark" href="#inspector_inspector_open_port_host_wait" id="inspector_inspector_open_port_host_wait">#</a></span></h2>
 <div class="signature"><ul>
-<li>port <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&lt;number&gt;</a> Port to listen on for inspector connections. Optional,
-defaults to what was specified on the CLI.</li>
-<li>host <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&lt;string&gt;</a> Host to listen on for inspector connections. Optional,
-defaults to what was specified on the CLI.</li>
-<li>wait <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&lt;boolean&gt;</a> Block until a client has connected. Optional, defaults
-to false.</li>
+<li><code>port</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type" class="type">&lt;number&gt;</a> Port to listen on for inspector connections. Optional.
+<strong>Default:</strong> what was specified on the CLI.</li>
+<li><code>host</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type" class="type">&lt;string&gt;</a> Host to listen on for inspector connections. Optional.
+<strong>Default:</strong> what was specified on the CLI.</li>
+<li><code>wait</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type" class="type">&lt;boolean&gt;</a> Block until a client has connected. Optional.
+<strong>Default:</strong> <code>false</code>.</li>
 </ul>
 </div><p>Activate inspector on host and port. Equivalent to <code>node
---inspect=[[host:]port]</code>, but can be done programatically after node has
+--inspect=[[host:]port]</code>, but can be done programmatically after node has
 started.</p>
 <p>If wait is <code>true</code>, will block until a client has connected to the inspect port
 and flow control has been passed to the debugger client.</p>
@@ -174,7 +194,7 @@ execution is suspended (through breakpoints, for example):</p>
 <pre><code class="lang-js">session.on(&#39;Debugger.paused&#39;, ({ params }) =&gt; {
   console.log(params.hitBreakpoints);
 });
-// [ &#39;/node/test/inspector/test-bindings.js:11:0&#39; ]
+// [ &#39;/the/file/that/has/the/breakpoint.js:11:0&#39; ]
 </code></pre>
 <h3>session.connect()<span><a class="mark" href="#inspector_session_connect" id="inspector_session_connect">#</a></span></h3>
 <div class="api_metadata">
@@ -210,6 +230,26 @@ to the run-time events.</p>
 with an error. <a href="#inspector_session_connect"><code>session.connect()</code></a> will need to be called to be able to send
 messages again. Reconnected session will lose all inspector state, such as
 enabled agents or configured breakpoints.</p>
+<h2>Example usage<span><a class="mark" href="#inspector_example_usage" id="inspector_example_usage">#</a></span></h2>
+<h3>CPU Profiler<span><a class="mark" href="#inspector_cpu_profiler" id="inspector_cpu_profiler">#</a></span></h3>
+<p>Apart from the debugger, various V8 Profilers are available through the DevTools
+protocol. Here&#39;s a simple example showing how to use the <a href="https://chromedevtools.github.io/devtools-protocol/v8/Profiler">CPU profiler</a>:</p>
+<pre><code class="lang-js">const inspector = require(&#39;inspector&#39;);
+
+const session = new inspector.Session();
+session.connect();
+
+session.post(&#39;Profiler.enable&#39;, () =&gt; {
+  session.post(&#39;Profiler.start&#39;, () =&gt; {
+    // invoke business logic under measurement here...
+
+    // some time later...
+    session.post(&#39;Profiler.stop&#39;, ({ profile }) =&gt; {
+      // write profile to disk, upload, etc.
+    });
+  });
+});
+</code></pre>
 
       </div>
     </div>

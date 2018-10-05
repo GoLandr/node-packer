@@ -1,5 +1,7 @@
 # String Decoder
 
+<!--introduced_in=v0.10.0-->
+
 > Stability: 2 - Stable
 
 The `string_decoder` module provides an API for decoding `Buffer` objects into
@@ -46,7 +48,7 @@ added: v0.1.99
 -->
 
 * `encoding` {string} The character encoding the `StringDecoder` will use.
-  Defaults to `'utf8'`.
+  **Default:** `'utf8'`.
 
 Creates a new `StringDecoder` instance.
 
